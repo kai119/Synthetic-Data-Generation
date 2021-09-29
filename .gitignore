@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Data files not needed
+data/Gravity\ Data\ Synthetic\ Transformed.xlsx
+data/Gravity\ Data\ Transformed.xlsx
