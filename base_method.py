@@ -5,34 +5,42 @@ import pandas as pd
 import torch
 import pyfiglet
 
-class MethodExecutor:
+class BaseMethod():
 
     def __init__(self, synth_data_filename, target_data_filename, h1_size, h2_size):
-        self.synth_df = pd.read_excel('data/' + synth_data_filename, 'Synthetic Data', skiprows=5)
-        self.synth_df.drop(['Unnamed: 7', 'Unnamed: 8', 'Unnamed: 9'], inplace=True, axis=1)
-        self.synth_df = transform_gravity_data(self.synth_df, 'Gravity Data Synthetic Transformed.xlsx')
-        self.X_synth = torch.FloatTensor(self.synth_df.drop(['OUTCOME'], axis=1).values)
-        self.y_synth = torch.LongTensor(self.synth_df['OUTCOME'].values)
+        self.synth_data_filename = synth_data_filename
+        self.target_data_filename = target_data_filename
 
-        self.target_df = pd.read_excel('data/' + target_data_filename, 'Target Data', skiprows=5)
-        self.target_df.drop(['Unnamed: 7', 'Unnamed: 8', 'Unnamed: 9'], inplace=True, axis=1)
-        self.target_df = transform_gravity_data(self.target_df, 'Gravity Data Transformed.xlsx')
-        self.X_target = torch.FloatTensor(self.target_df.drop(['OUTCOME'], axis=1).values)
-        self.y_target = torch.LongTensor(self.target_df['OUTCOME'].values)
+        self.synth_df = pd.DataFrame()
+        self.X_synth = torch.FloatTensor()
+        self.y_synth = torch.LongTensor()
+        self.target_df = pd.DataFrame()
+        self.X_target = torch.FloatTensor()
+        self.y_target = torch.LongTensor()
 
         self.network = Network(5, h1_size, h2_size, 2)
         self.h1_size = h1_size
         self.h2_size = h2_size
 
+    def initialize_data(self):
+        self.synth_df = pd.read_excel('data/' + self.synth_data_filename, 'Synthetic Data', skiprows=5)
+        self.synth_df.drop(['Unnamed: 7', 'Unnamed: 8', 'Unnamed: 9'], inplace=True, axis=1)
+        self.synth_df = transform_gravity_data(self.synth_df, 'Gravity Data Synthetic Transformed.xlsx')
+        self.X_synth = torch.FloatTensor(self.synth_df.drop(['OUTCOME'], axis=1).values)
+        self.y_synth = torch.LongTensor(self.synth_df['OUTCOME'].values)
+
+        self.target_df = pd.read_excel('data/' + self.target_data_filename, 'Target Data', skiprows=5)
+        self.target_df.drop(['Unnamed: 7', 'Unnamed: 8', 'Unnamed: 9'], inplace=True, axis=1)
+        self.target_df = transform_gravity_data(self.target_df, 'Gravity Data Transformed.xlsx')
+        self.X_target = torch.FloatTensor(self.target_df.drop(['OUTCOME'], axis=1).values)
+        self.y_target = torch.LongTensor(self.target_df['OUTCOME'].values)
+
     def experiment(self):
         self.network = Network(5, self.h1_size, self.h2_size, 2)
-        print('----------------------------------Training----------------------------------')
         self.network.train_network(self.X_synth, self.y_synth)
-        print('----------------------------------------------------------------------------')
-        print()
         synth_data_info = get_data_info(self.network, 3, self.X_synth)
         print('---------------------------------Evaluation---------------------------------')
-        self.network.evaluate_model(self.X_target, self.y_target)
+        before_accuracy = self.network.evaluate_model(self.X_target, self.y_target)
         print('----------------------------------------------------------------------------')
         print()
         print('------------------------------Method Execution------------------------------')
@@ -55,23 +63,32 @@ class MethodExecutor:
 
         self.X_synth = torch.FloatTensor(self.synth_df.drop(['OUTCOME'], axis=1).values)
         self.y_synth = torch.LongTensor(self.synth_df['OUTCOME'].values)
-        print('---------------------------------ReTraining---------------------------------')
         self.network = Network(5, self.h1_size, self.h2_size, 2)
         self.network.train_network(self.X_synth, self.y_synth)
-        print('----------------------------------------------------------------------------')
-        print()
         print('---------------------------------Evaluation---------------------------------')
-        self.network.evaluate_model(self.X_target, self.y_target)
+        after_accuracy = self.network.evaluate_model(self.X_target, self.y_target)
         print('----------------------------------------------------------------------------')
         print()
 
-    def run(self, banner_text):
+        return before_accuracy, after_accuracy
+
+    def run(self, banner_text, results_file):
         ascii_banner = pyfiglet.figlet_format(banner_text)
         print(ascii_banner)
         print()
-        self.experiment()
+        columns = ['Before Accuracy', 'After Accuracy', 'Accuracy Change']
+
+        run_results = pd.DataFrame(columns=columns)
+        for i in range(100):
+            self.initialize_data()
+            print(f'-------------------------------------------Run No {i+1}-------------------------------------------')
+            before_accuracy, after_accuracy = self.experiment()
+            results = pd.Series([before_accuracy, after_accuracy, after_accuracy - before_accuracy], index=columns)
+            run_results = run_results.append(results, ignore_index=True)
+        run_results.to_csv('results/' + results_file)
 
 
 if __name__ == '__main__':
-    executor = MethodExecutor('Gravity Data.xlsx', 'Gravity Data.xlsx', 10, 5)
-    executor.run("Synthetic Data Generation Test")
+    executor = BaseMethod('Gravity Data.xlsx', 'Gravity Data.xlsx', 10, 5)
+
+    executor.run("Synthetic Data Generation - Base Method", 'Base Method.csv')

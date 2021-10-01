@@ -37,7 +37,6 @@ class Network(nn.Module):
                 predicted_y = prediction.data.numpy()
                 actual_y = y.data.numpy()
                 accuracy = (predicted_y == actual_y).sum() / actual_y.size
-                print('Epoch: %s, Loss: %s, Accuracy: %s' % (epoch, loss_score.item(), accuracy))
 
     def get_activations(self):
         return [
@@ -54,3 +53,4 @@ class Network(nn.Module):
         num_correct_preds = (predicted_y == actual_y).sum()
         accuracy = num_correct_preds / actual_y.size
         print(f'Amount of correctly prediced pieces of data: [{num_correct_preds}], Accuracy: [{accuracy}]')
+        return accuracy
