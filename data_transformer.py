@@ -23,10 +23,11 @@ def transform_gravity_data(df, filename):
         the transformed gravity data
     """
 
-    if {'Height (m)', 'Mass (KG)', 'Type', 'Speed On Impact (m/s)',
-            'Deceleration', 'Force', 'OUTCOME'}.issubset(df.columns):
-        # Drop columns not being used
-        df.drop(['Speed On Impact (m/s)', 'Deceleration', 'Force'], inplace=True, axis=1)
+    if {'Height (m)', 'Mass (KG)', 'Type', 'OUTCOME'}.issubset(df.columns):
+
+        if {'Speed On Impact (m/s)', 'Deceleration', 'Force'}.issubset(df.columns):
+            # Drop columns not being used
+            df.drop(['Speed On Impact (m/s)', 'Deceleration', 'Force'], inplace=True, axis=1)
 
         # One-hot encode the Type Column
         types = pd.get_dummies(df['Type'])

@@ -23,7 +23,7 @@ class IterationsExperiment(BaseMethod):
             synth_data_info = get_data_info(self.network, 3, self.X_synth)
             print('---------------------------------Evaluation---------------------------------')
             accuracy = self.network.evaluate_model(self.X_target, self.y_target)
-            if (iteration == 0):
+            if iteration == 0:
                 before_accuracy = accuracy
             print('----------------------------------------------------------------------------')
             print()
