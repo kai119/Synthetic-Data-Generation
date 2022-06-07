@@ -4,6 +4,9 @@ from data_transformer import transform_gravity_data
 import pandas as pd
 import torch
 import pyfiglet
+import os
+from timeit import default_timer as timer
+
 
 class BaseMethod():
 
@@ -23,6 +26,8 @@ class BaseMethod():
         self.h2_size = h2_size
 
     def initialize_data(self):
+        """Create the synthetic and target data sets, transform the data, and split the data into X and y variables."""
+
         self.synth_df = pd.read_excel('data/' + self.synth_data_filename, 'Synthetic Data', skiprows=5)
         self.synth_df.drop(['Unnamed: 7', 'Unnamed: 8', 'Unnamed: 9'], inplace=True, axis=1)
         self.synth_df = transform_gravity_data(self.synth_df, 'Gravity Data Synthetic Transformed.xlsx')
@@ -36,6 +41,8 @@ class BaseMethod():
         self.y_target = torch.LongTensor(self.target_df['OUTCOME'].values)
 
     def experiment(self):
+        """Perform the main experiment."""
+
         self.network = Network(5, self.h1_size, self.h2_size, 2)
         self.network.train_network(self.X_synth, self.y_synth)
         synth_data_info = get_data_info(self.network, 3, self.X_synth)
@@ -73,19 +80,29 @@ class BaseMethod():
         return before_accuracy, after_accuracy
 
     def run(self, banner_text, results_file):
+        """Run the experiment 100 times and export the results to a csv."""
+
         ascii_banner = pyfiglet.figlet_format(banner_text)
         print(ascii_banner)
         print()
+        completed_runs = 0
         columns = ['Before Accuracy', 'After Accuracy', 'Accuracy Change']
-
-        run_results = pd.DataFrame(columns=columns)
+        if os.path.isfile('results/' + results_file):
+            run_results = pd.read_csv('results/' + results_file)
+            run_results = run_results[columns]
+            completed_runs = run_results.shape[0]
+            print(f'Resuming experiment from run {completed_runs + 1}')
+        else:
+            run_results = pd.DataFrame(columns=columns)
         for i in range(100):
             self.initialize_data()
-            print(f'-------------------------------------------Run No {i+1}-------------------------------------------')
+            print(f'-------------------------------------------Run No {i+completed_runs+1}-------------------------------------------')
+            start_time = timer()
             before_accuracy, after_accuracy = self.experiment()
-            results = pd.Series([before_accuracy, after_accuracy, after_accuracy - before_accuracy], index=columns)
+            end_time = timer()
+            results = pd.Series([before_accuracy, after_accuracy, after_accuracy - before_accuracy, end_time - start_time], index=columns)
             run_results = run_results.append(results, ignore_index=True)
-        run_results.to_csv('results/' + results_file)
+            run_results.to_csv('results/' + results_file)
 
 
 if __name__ == '__main__':

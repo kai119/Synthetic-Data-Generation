@@ -6,6 +6,19 @@ class DataGenerator:
 
     @staticmethod
     def generate_gravity_data(rows):
+        """Generate a new set of randomly classified gravity data.
+
+        Parameters
+        ----------
+        rows: int
+            the number of rows of data to generate
+
+        Returns
+        -------
+        pandas.DataFrame
+            a new set of randomly classified gravity data
+        """
+
         columns = ['Height (m)', 'Mass (KG)', 'Type', 'OUTCOME']
         all_data = []
         df = pd.DataFrame(columns=columns)

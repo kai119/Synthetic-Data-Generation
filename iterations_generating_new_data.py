@@ -5,6 +5,7 @@ from method import *
 from data_transformer import transform_gravity_data
 from all_incorrect_data import find_synth_data_to_remove
 import pandas as pd
+from timebudget import timebudget
 
 
 class IterationGenerateNewData(BaseMethod):
@@ -14,6 +15,8 @@ class IterationGenerateNewData(BaseMethod):
         self.data_generations = data_generations
 
     def perform_iteration(self):
+        """Perform one iteration of synthetic data generation."""
+
         self.network = Network(5, self.h1_size, self.h2_size, 2)
         self.network.train_network(self.X_synth, self.y_synth)
         synth_data_info = get_data_info(self.network, 3, self.X_synth)
@@ -48,6 +51,7 @@ class IterationGenerateNewData(BaseMethod):
         print('----------------------------------------------------------------------------')
         print()
 
+    @timebudget
     def experiment(self):
         final_df = pd.DataFrame(columns=['Height (m)', 'Mass (KG)', 'FRAGILE', 'MEDIUM', 'HARD', 'OUTCOME'])
         self.network = Network(5, self.h1_size, self.h2_size, 2)
