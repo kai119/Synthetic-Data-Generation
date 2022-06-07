@@ -100,7 +100,7 @@ class BaseMethod():
             start_time = timer()
             before_accuracy, after_accuracy = self.experiment()
             end_time = timer()
-            results = pd.Series([before_accuracy, after_accuracy, after_accuracy - before_accuracy, end_time - start_time], index=columns)
+            results = pd.Series([before_accuracy, after_accuracy, after_accuracy - before_accuracy], index=columns)
             run_results = run_results.append(results, ignore_index=True)
             run_results.to_csv('results/' + results_file)
 
